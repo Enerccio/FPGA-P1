@@ -49,7 +49,7 @@ architecture RTL of SegmentController is
 	signal w_EditedMemoryCellMinus : std_logic_vector (3 downto 0);
 	
 	-- memory rerouting when editing
-	signal w_Memory 		 			 : t_Memory := (others => (others => '0')); 
+	signal w_Memory 		 			 : t_Memory := (others => (others => 'U')); 
 	
 begin
 	-- 2000ms at 50 MHz is 100000000	
@@ -87,53 +87,6 @@ begin
 				-- we are in edit mode
 				-- buttons +- now will work and edit memory cells
 				
-				-- display segment with memory modifiable if not permanent
-				case w_EditingSegment is
-					when "001" => 
-						w_Memory(0) <= r_EditedMemoryCell;
-						w_Memory(1) <= r_Memory(1);
-						w_Memory(2) <= r_Memory(2);
-						w_Memory(3) <= r_Memory(3);
-						w_Memory(4) <= r_Memory(4);
-						w_Memory(5) <= r_Memory(5);
-					when "010" => 
-						w_Memory(0) <= r_Memory(0);
-						w_Memory(1) <= r_EditedMemoryCell;
-						w_Memory(2) <= r_Memory(2);
-						w_Memory(3) <= r_Memory(3);
-						w_Memory(4) <= r_Memory(4);
-						w_Memory(5) <= r_Memory(5);	
-					when "011" => 
-						w_Memory(0) <= r_Memory(0);
-						w_Memory(1) <= r_Memory(1);
-						w_Memory(2) <= r_EditedMemoryCell; 
-						w_Memory(3) <= r_Memory(3);
-						w_Memory(4) <= r_Memory(4);
-						w_Memory(5) <= r_Memory(5);	
-					when "100" => 
-						w_Memory(0) <= r_Memory(0);
-						w_Memory(1) <= r_Memory(1);
-						w_Memory(2) <= r_Memory(2);
-						w_Memory(3) <= r_EditedMemoryCell; 
-						w_Memory(4) <= r_Memory(4);
-						w_Memory(5) <= r_Memory(5);	
-					when "101" => 
-						w_Memory(0) <= r_Memory(0);
-						w_Memory(1) <= r_Memory(1);
-						w_Memory(2) <= r_Memory(2);
-						w_Memory(3) <= r_Memory(3);
-						w_Memory(4) <= r_EditedMemoryCell; 
-						w_Memory(5) <= r_Memory(5);	
-					when "110" => 
-						w_Memory(0) <= r_Memory(0);
-						w_Memory(1) <= r_Memory(1);
-						w_Memory(2) <= r_Memory(2);
-						w_Memory(3) <= r_Memory(3);
-						w_Memory(4) <= r_Memory(4);
-						w_Memory(5) <= r_EditedMemoryCell; 
-					when others => null;
-				end case;
-				
 				if w_ButtonPushed(1) = '0' and r_ButtonPushed(1) = '1' then
 					-- - button pushed, lower the value
 					r_EditedMemoryCell <= w_EditedMemoryCellPlus;
@@ -156,12 +109,12 @@ begin
 					r_EditMode <= '0';
 				end if;
 			else
-				w_Memory <= r_Memory;
 				-- we are in display mode
 				-- buttons +- do not work and we only pass state to display unchanged
 				if w_ButtonPushed(0) = '0' and r_ButtonPushed(0) = '1' then
 					r_EditMode <= '1'; 
 					r_EditModeCheck <= '1';
+					
 					case w_EditingSegment is
 						when "001" => r_EditedMemoryCell <= r_Memory(0);
 						when "010" => r_EditedMemoryCell <= r_Memory(1); 
@@ -173,6 +126,29 @@ begin
 					end case;
 				end if;
 			end if;
+		end if;
+	end process;
+	
+	p_SegmentWirer : process (r_EditedMemoryCell, r_Memory, r_EditMode, w_EditingSegment) is begin	
+		w_Memory <= r_Memory;
+		
+		if r_EditMode = '1' then
+			-- display segment with memory modifiable if not permanent
+			case w_EditingSegment is
+				when "001" => 
+					w_Memory(0) <= r_EditedMemoryCell;
+				when "010" => 
+					w_Memory(1) <= r_EditedMemoryCell;
+				when "011" => 
+					w_Memory(2) <= r_EditedMemoryCell; 
+				when "100" => 
+					w_Memory(3) <= r_EditedMemoryCell;
+				when "101" => 
+					w_Memory(4) <= r_EditedMemoryCell;
+				when "110" => 
+					w_Memory(5) <= r_EditedMemoryCell; 
+				when others => null;
+			end case;
 		end if;
 	end process;
 	
